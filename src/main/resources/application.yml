@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: moudle
+
+# @formatter:off
+# 以下配置是自定义的支付设置，不是标准的Spring Boot属性
+pay:
+  # 微信支付
+  wechat:
+    app-id: wxxxxx
+    mch-id: xxxx
+    mch-key: xxxxx
+    key-path: classpath:cert/apiclient_cert.p12
+    notify-url: http://xxxx/wx/notify/pay
+    refund-notify-url: http://xxxx/wx/notify/refund
+
+  # 支付宝支付
+  alipay:
+    app-id: xxxxxxxxxxxxxxxx
+    private-key:
+    public-key:
+    server-url: https://openapi.alipay.com/gateway.do
+    notify-url: https://your-domain.com/alipay/notify
+    return-url: https://your-domain.com/alipay/return
+# @formatter:on
