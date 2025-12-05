@@ -1,12 +1,12 @@
 package com.ziwen.moudle.controller.pay;
 
-import com.ziwen.moudle.dto.Order;
+import com.ziwen.moudle.common.AjaxResult;
+import com.ziwen.moudle.dto.pay.Order;
 import com.ziwen.moudle.enums.PaymentTypeEnum;
 import com.ziwen.moudle.factory.PaymentFactory;
-import com.ziwen.moudle.service.AliPaymentService;
-import com.ziwen.moudle.service.PaymentService;
-import com.ziwen.moudle.service.WxPaymentService;
-import com.ziwen.moudle.utils.Response;
+import com.ziwen.moudle.service.pay.AliPaymentService;
+import com.ziwen.moudle.service.pay.PaymentService;
+import com.ziwen.moudle.service.pay.WxPaymentService;
 import com.github.binarywang.wxpay.bean.notify.WxPayNotifyResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,7 +43,7 @@ public class PaymentController {
      * 根据支付类型（微信/支付宝）调用对应的支付服务
      *
      * @param order 订单信息，包含订单号、金额、支付类型等
-     * @return Response 支付结果响应，包含支付二维码/跳转信息
+     * @return AjaxResult 支付结果响应，包含支付二维码/跳转信息
      */
     @PostMapping("/pay")
     @Operation(
@@ -53,7 +53,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "支付成功")
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "500", description = "支付服务异常")
-    public Response<?> pay(
+    public AjaxResult pay(
             @Parameter(description = "订单信息", required = true) @RequestBody Order order){
 
         // 校验订单参数
@@ -69,7 +69,7 @@ public class PaymentController {
      *
      * @param orderNo 订单号
      * @param paymentType 支付类型：WX_PAY（微信）、ALI_PAY（支付宝）
-     * @return Response 订单支付状态信息
+     * @return AjaxResult 订单支付状态信息
      */
     @GetMapping("/query/{orderNo}/{paymentType}")
     @Operation(
@@ -79,7 +79,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "404", description = "订单不存在")
-    public Response<?> query(
+    public AjaxResult query(
             @Parameter(description = "订单号", required = true) @PathVariable("orderNo") String orderNo,
             @Parameter(description = "支付类型：WX_PAY-微信支付，ALI_PAY-支付宝支付", required = true) @PathVariable("paymentType") String paymentType) {
         PaymentService paymentService = paymentFactory.getPaymentService(PaymentTypeEnum.getByName(paymentType));
@@ -91,7 +91,7 @@ public class PaymentController {
      * 根据订单信息调用微信或支付宝退款接口
      *
      * @param order 退款订单信息，包含原订单号、退款金额、退款原因等
-     * @return Response 退款结果响应
+     * @return AjaxResult 退款结果响应
      */
     @PostMapping("/refund")
     @Operation(
@@ -101,7 +101,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "200", description = "退款申请成功")
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "500", description = "退款服务异常")
-    public Response<?> refund(
+    public AjaxResult refund(
             @Parameter(description = "退款订单信息", required = true) @RequestBody Order order) {
         PaymentService paymentService = paymentFactory.getPaymentService(PaymentTypeEnum.getByName(order.getPaymentType()));
         return paymentService.refund(order);

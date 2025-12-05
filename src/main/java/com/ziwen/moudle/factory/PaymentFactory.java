@@ -1,8 +1,11 @@
 package com.ziwen.moudle.factory;
 
-import com.ziwen.moudle.dto.Order;
+import com.ziwen.moudle.dto.pay.Order;
 import com.ziwen.moudle.enums.PaymentTypeEnum;
-import com.ziwen.moudle.service.*;
+import com.ziwen.moudle.service.pay.AliPaymentService;
+import com.ziwen.moudle.service.pay.PaymentService;
+import com.ziwen.moudle.service.pay.WxPaymentService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.ziwen.moudle.dto;
+package com.ziwen.moudle.dto.pay;
 
 import lombok.Data;
 

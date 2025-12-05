@@ -1,9 +1,9 @@
-package com.ziwen.moudle.service;
+package com.ziwen.moudle.service.pay;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.ziwen.moudle.common.AjaxResult;
 import com.ziwen.moudle.config.WxPayProperties;
-import com.ziwen.moudle.dto.Order;
-import com.ziwen.moudle.utils.Response;
+import com.ziwen.moudle.dto.pay.Order;
 import com.ziwen.moudle.enums.TradeTypeEnum;
 import com.github.binarywang.wxpay.bean.notify.WxPayOrderNotifyResult;
 import com.github.binarywang.wxpay.bean.request.WxPayOrderQueryRequest;
@@ -37,7 +37,7 @@ public class WxPaymentService implements PaymentService {
     private WxPayProperties properties;
     
     @Override
-    public <T> Response<T> pay(Order order) {
+    public AjaxResult pay(Order order) {
         try {
             WxPayUnifiedOrderRequest request = WxPayUnifiedOrderRequest.newBuilder()
                 .outTradeNo(order.getOrderNo())
@@ -54,35 +54,33 @@ public class WxPaymentService implements PaymentService {
             log.info("微信支付请求结果：{}", JSONObject.toJSONString(request));
 
             result.setXmlString("");
-            @SuppressWarnings("unchecked")
-            Response<T> response = (Response<T>) Response.success(result);
+            AjaxResult response = AjaxResult.success(result);
             return response;
 
         }catch ( Exception e) {
             log.info("微信请求支付失败:{}", e.getMessage());
-            return Response.fail("微信请求支付失败");
+            return AjaxResult.error("微信请求支付失败");
         }
     }
     
     @Override
-    public <T> Response<T> query(String orderNo) {
+    public AjaxResult query(String orderNo) {
         WxPayOrderQueryRequest request = new WxPayOrderQueryRequest();
         request.setOutTradeNo(orderNo);
 
         try {
             log.info("微信查询请求参数：{}", JSONObject.toJSONString(request));
             WxPayOrderQueryResult result = wxPayService.queryOrder(request);
-            @SuppressWarnings("unchecked")
-            Response<T> response = (Response<T>) Response.success(result);
+            AjaxResult response = AjaxResult.success(result);
             return response;
         }catch ( Exception e){
             log.info("微信请求查询失败:{}", e.getMessage());
-            return Response.fail("微信请求查询失败");
+            return AjaxResult.error("微信请求查询失败");
         }
     }
     
     @Override
-    public <T> Response<T> refund(Order order) {
+    public AjaxResult refund(Order order) {
         WxPayRefundRequest wxPayRefundRequest = new WxPayRefundRequest();
         wxPayRefundRequest.setOutTradeNo(order.getOrderNo());
         wxPayRefundRequest.setOutRefundNo(buildRefundNo(order.getOrderNo()));
@@ -94,12 +92,11 @@ public class WxPaymentService implements PaymentService {
         try {
             log.info("微信查询请求参数：{}", JSONObject.toJSONString(wxPayRefundRequest));
             WxPayRefundResult refund = wxPayService.refund(wxPayRefundRequest);
-            @SuppressWarnings("unchecked")
-            Response<T> response = (Response<T>) Response.success(refund);
+            AjaxResult response = AjaxResult.success(refund);
             return response;
         } catch (WxPayException e) {
             log.info("微信请求退款失败:{}", e.getMessage());
-            return Response.fail("微信请求退款失败");
+            return AjaxResult.error("微信请求退款失败");
         }
     }
     

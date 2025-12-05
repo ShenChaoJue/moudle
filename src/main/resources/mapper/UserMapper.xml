@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ziwen.moudle.mapper.UserMapper">
+
+    <!-- 结果集映射 -->
+    <resultMap id="BaseResultMap" type="com.ziwen.moudle.entity.rbac.User">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础列名 -->
+    <sql id="Base_Column_List">
+        id, user_name, password, create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 查询用户列表 -->
+    <select id="selectUserList" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE is_deleted = 0
+        <if test="userName != null and userName != ''">
+            AND user_name LIKE CONCAT('%', #{userName}, '%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_user
+        WHERE id = #{id,jdbcType=BIGINT}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 查询用户角色ID列表 -->
+    <select id="selectUserRoleIds" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT r.id
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON ur.role_id = r.id AND r.is_deleted = 0
+        WHERE ur.user_id = #{userId,jdbcType=BIGINT}
+        AND ur.is_deleted = 0
+        ORDER BY r.id
+    </select>
+
+    <!-- 查询用户角色名称列表 -->
+    <select id="selectUserRoleNames" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT r.role_name
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON ur.role_id = r.id AND r.is_deleted = 0
+        WHERE ur.user_id = #{userId,jdbcType=BIGINT}
+        AND ur.is_deleted = 0
+        ORDER BY r.role_name
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="com.ziwen.moudle.entity.rbac.User">
+        INSERT INTO sys_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userName != null">user_name</if>
+            <if test="password != null">password</if>
+            <if test="createTime != null">create_time</if>
+            <if test="updateTime != null">update_time</if>
+            <if test="isDeleted != null">is_deleted</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userName != null">#{userName,jdbcType=VARCHAR}</if>
+            <if test="password != null">#{password,jdbcType=VARCHAR}</if>
+            <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP}</if>
+            <if test="updateTime != null">#{updateTime,jdbcType=TIMESTAMP}</if>
+            <if test="isDeleted != null">#{isDeleted,jdbcType=INTEGER}</if>
+        </trim>
+    </insert>
+
+    <!-- 根据ID更新用户 -->
+    <update id="updateById" parameterType="com.ziwen.moudle.entity.rbac.User">
+        UPDATE sys_user
+        <set>
+            <if test="userName != null">user_name = #{userName,jdbcType=VARCHAR},</if>
+            <if test="password != null">password = #{password,jdbcType=VARCHAR},</if>
+            <if test="updateTime != null">update_time = #{updateTime,jdbcType=TIMESTAMP},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted,jdbcType=INTEGER},</if>
+        </set>
+        WHERE id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 检查用户名是否存在 -->
+    <select id="checkUserNameExists" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_user
+        WHERE user_name = #{userName,jdbcType=VARCHAR}
+        AND is_deleted = 0
+        <if test="excludeId != null and excludeId != ''">
+            AND id != #{excludeId,jdbcType=BIGINT}
+        </if>
+    </select>
+
+    <!-- 根据用户名查询密码 -->
+    <select id="selectPasswordByUserName" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT password
+        FROM sys_user
+        WHERE user_name = #{userName,jdbcType=VARCHAR}
+        AND is_deleted = 0
+        LIMIT 1
+    </select>
+</mapper>

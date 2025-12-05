@@ -1,7 +1,7 @@
-package com.ziwen.moudle.service;
+package com.ziwen.moudle.service.pay;
 
-import com.ziwen.moudle.dto.Order;
-import com.ziwen.moudle.utils.Response;
+import com.ziwen.moudle.common.AjaxResult;
+import com.ziwen.moudle.dto.pay.Order;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,27 +19,27 @@ public interface PaymentService {
      * 根据订单信息调用对应的支付服务，创建支付订单并返回支付二维码或跳转链接
      *
      * @param order 订单信息
-     * @return Response 支付结果
+     * @return AjaxResult 支付结果
      */
-    <T> Response<T> pay(Order order);
+    AjaxResult pay(Order order);
 
     /**
      * 查询订单支付状态
      * 根据订单号查询支付结果
      *
      * @param orderNo 订单号
-     * @return Response 支付状态信息
+     * @return AjaxResult 支付状态信息
      */
-    <T> Response<T> query(String orderNo);
+    AjaxResult query(String orderNo);
 
     /**
      * 申请退款
      * 根据订单信息调用退款接口
      *
      * @param order 退款订单信息
-     * @return Response 退款结果
+     * @return AjaxResult 退款结果
      */
-    <T> Response<T> refund(Order order);
+    AjaxResult refund(Order order);
 
     /**
      * 处理支付回调

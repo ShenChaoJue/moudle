@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ziwen.moudle.mapper.rbac.RoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.ziwen.moudle.entity.rbac.Role">
+        <id column="id" property="id"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="role_name" property="roleName"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, create_time, update_time, create_by, update_by,
+        role_name, is_deleted
+    </sql>
+
+    <!-- 查询角色列表 -->
+    <select id="selectRoleList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_role
+        WHERE is_deleted = 0
+        <if test="roleName != null and roleName != ''">
+            AND role_name LIKE CONCAT('%', #{roleName}, '%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据ID查询角色 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_role
+        WHERE id = #{id}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 查询角色关联的菜单ID列表 -->
+    <select id="selectRoleMenuIds" resultType="java.lang.Long">
+        SELECT rm.menu_id
+        FROM sys_role_menu rm
+        WHERE rm.role_id = #{roleId}
+        AND rm.is_deleted = 0
+    </select>
+
+    <!-- 查询角色关联的菜单名称列表 -->
+    <select id="selectRoleMenuNames" resultType="java.lang.String">
+        SELECT m.menu_name
+        FROM sys_role_menu rm
+        INNER JOIN sys_menu m ON rm.menu_id = m.id AND m.is_deleted = 0
+        WHERE rm.role_id = #{roleId}
+        AND rm.is_deleted = 0
+        ORDER BY m.sort ASC
+    </select>
+
+    <!-- 查询角色关联的用户ID列表 -->
+    <select id="selectRoleUserIds" resultType="java.lang.Long">
+        SELECT ur.user_id
+        FROM sys_user_role ur
+        WHERE ur.role_id = #{roleId}
+        AND ur.is_deleted = 0
+    </select>
+
+    <!-- 查询角色关联的用户名称列表 -->
+    <select id="selectRoleUserNames" resultType="java.lang.String">
+        SELECT u.user_name
+        FROM sys_user_role ur
+        INNER JOIN sys_user u ON ur.user_id = u.id AND u.is_deleted = 0
+        WHERE ur.role_id = #{roleId}
+        AND ur.is_deleted = 0
+    </select>
+
+    <!-- 插入角色 -->
+    <insert id="insert" parameterType="com.ziwen.moudle.entity.rbac.Role">
+        INSERT INTO sys_role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="roleName != null">role_name</if>
+            <if test="createTime != null">create_time</if>
+            <if test="updateTime != null">update_time</if>
+            <if test="createBy != null">create_by</if>
+            <if test="updateBy != null">update_by</if>
+            <if test="isDeleted != null">is_deleted</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="roleName != null">#{roleName}</if>
+            <if test="createTime != null">#{createTime}</if>
+            <if test="updateTime != null">#{updateTime}</if>
+            <if test="createBy != null">#{createBy}</if>
+            <if test="updateBy != null">#{updateBy}</if>
+            <if test="isDeleted != null">#{isDeleted}</if>
+        </trim>
+    </insert>
+
+    <!-- 根据ID更新角色 -->
+    <update id="updateById" parameterType="com.ziwen.moudle.entity.rbac.Role">
+        UPDATE sys_role
+        <set>
+            <if test="roleName != null">role_name = #{roleName},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 检查角色名称是否存在 -->
+    <select id="checkRoleNameExists" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM sys_role
+        WHERE is_deleted = 0
+        AND role_name = #{roleName}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+</mapper>

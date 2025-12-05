@@ -1,4 +1,4 @@
-package com.ziwen.moudle.service;
+package com.ziwen.moudle.service.pay;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alipay.api.AlipayClient;
@@ -10,10 +10,10 @@ import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.ziwen.moudle.common.AjaxResult;
 import com.ziwen.moudle.config.AliPayConfig;
 import com.ziwen.moudle.constant.PayConstant;
-import com.ziwen.moudle.dto.Order;
-import com.ziwen.moudle.utils.Response;
+import com.ziwen.moudle.dto.pay.Order;
 import com.ziwen.moudle.enums.TradeTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ public class AliPaymentService implements PaymentService {
     private AliPayConfig alipayConfig;
     
     @Override
-    public <T> Response<T> pay(Order order) {
+    public AjaxResult pay(Order order) {
 
         AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
         alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());
@@ -77,7 +77,7 @@ public class AliPaymentService implements PaymentService {
 
                 if (response == null) {
                     log.error("支付宝响应为空");
-                    return Response.fail("支付宝响应为空");
+                    return AjaxResult.error("支付宝响应为空");
                 }
 
                 log.info("支付宝支付请求结果：{}", JSONObject.toJSONString(response));
@@ -87,9 +87,7 @@ public class AliPaymentService implements PaymentService {
                 log.info("支付宝响应子消息：{}", response.getSubMsg());
                 log.info("==================== 支付宝支付请求结束 ====================");
 
-                @SuppressWarnings("unchecked")
-                Response<T> result = (Response<T>) Response.success(response);
-                return result;
+                return AjaxResult.success(response);
 
             } else if (TradeTypeEnum.APP.name().equals(order.getTradeType())) {
 
@@ -100,27 +98,26 @@ public class AliPaymentService implements PaymentService {
 
                 if (response == null) {
                     log.error("支付宝APP支付响应为空");
-                    return Response.fail("支付宝APP支付响应为空");
+                    return AjaxResult.error("支付宝APP支付响应为空");
                 }
 
                 log.info("支付宝APP支付响应：{}", JSONObject.toJSONString(response));
 
-                @SuppressWarnings("unchecked")
-                Response<T> result = (Response<T>) Response.success(response);
+                AjaxResult result = AjaxResult.success(response);
                 log.info("==================== 支付宝APP支付请求结束 ====================");
                 return result;
 
             } else {
-                return Response.fail("不支持的支付类型");
+                return AjaxResult.error("不支持的支付类型");
             }
         }catch (Exception e) {
             log.info("支付宝请求支付失败:{}", e.getMessage());
-            return Response.fail("支付宝请求支付失败");
+            return AjaxResult.error("支付宝请求支付失败");
         }
     }
     
     @Override
-    public <T> Response<T> query(String orderNo) {
+    public AjaxResult query(String orderNo) {
         log.info("==================== 支付宝订单查询开始 ====================");
         log.info("查询订单号：{}", orderNo);
 
@@ -135,7 +132,7 @@ public class AliPaymentService implements PaymentService {
 
             if (response == null) {
                 log.error("支付宝查询响应为空");
-                return Response.fail("支付宝查询响应为空");
+                return AjaxResult.error("支付宝查询响应为空");
             }
 
             log.info("支付宝查询响应：{}", JSONObject.toJSONString(response));
@@ -144,18 +141,17 @@ public class AliPaymentService implements PaymentService {
             log.info("查询响应子码：{}", response.getSubCode());
             log.info("查询响应子消息：{}", response.getSubMsg());
 
-            @SuppressWarnings("unchecked")
-            Response<T> result = (Response<T>) Response.success(response);
+            AjaxResult result = AjaxResult.success(response);
             log.info("==================== 支付宝订单查询结束 ====================");
             return result;
         } catch (Exception e) {
             log.error("支付宝请求查询失败", e);
-            return Response.fail("支付宝请求查询失败: " + e.getMessage());
+            return AjaxResult.error("支付宝请求查询失败: " + e.getMessage());
         }
     }
     
     @Override
-    public <T> Response<T> refund(Order order) {
+    public AjaxResult refund(Order order) {
         log.info("==================== 支付宝退款请求开始 ====================");
         log.info("退款订单号：{}", order.getOrderNo());
         log.info("退款金额：{}", order.getAmount());
@@ -174,7 +170,7 @@ public class AliPaymentService implements PaymentService {
 
             if (response == null) {
                 log.error("支付宝退款响应为空");
-                return Response.fail("支付宝退款响应为空");
+                return AjaxResult.error("支付宝退款响应为空");
             }
 
             log.info("支付宝退款响应：{}", JSONObject.toJSONString(response));
@@ -183,13 +179,12 @@ public class AliPaymentService implements PaymentService {
             log.info("退款响应子码：{}", response.getSubCode());
             log.info("退款响应子消息：{}", response.getSubMsg());
 
-            @SuppressWarnings("unchecked")
-            Response<T> result = (Response<T>) Response.success(response);
+            AjaxResult result = AjaxResult.success(response);
             log.info("==================== 支付宝退款请求结束 ====================");
             return result;
         } catch (Exception e) {
             log.error("支付宝请求退款失败", e);
-            return Response.fail("支付宝请求退款失败: " + e.getMessage());
+            return AjaxResult.error("支付宝请求退款失败: " + e.getMessage());
         }
     }
     

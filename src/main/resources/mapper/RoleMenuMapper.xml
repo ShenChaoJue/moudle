@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ziwen.moudle.mapper.rbac.RoleMenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.ziwen.moudle.entity.rbac.RoleMenu">
+        <id column="id" property="id"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="role_id" property="roleId"/>
+        <result column="menu_id" property="menuId"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, create_time, update_time, create_by, update_by,
+        role_id, menu_id, is_deleted
+    </sql>
+
+    <!-- 删除菜单关联的角色（软删除） -->
+    <update id="deleteMenuRoles">
+        UPDATE sys_role_menu
+        SET is_deleted = 1
+        WHERE menu_id = #{menuId}
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量删除菜单关联的角色（软删除） -->
+    <update id="deleteMenuRolesBatch">
+        UPDATE sys_role_menu
+        SET is_deleted = 1
+        WHERE menu_id IN
+        <foreach collection="menuIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 删除角色关联的菜单（软删除） -->
+    <update id="deleteRoleMenus">
+        UPDATE sys_role_menu
+        SET is_deleted = 1
+        WHERE role_id = #{roleId}
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量删除角色关联的菜单（软删除） -->
+    <update id="deleteRoleMenusBatch">
+        UPDATE sys_role_menu
+        SET is_deleted = 1
+        WHERE role_id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量插入角色菜单关联 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO sys_role_menu (role_id, menu_id, is_deleted)
+        VALUES
+        <foreach collection="roleMenus" item="item" separator=",">
+            (#{item.roleId}, #{item.menuId}, #{item.isDeleted})
+        </foreach>
+    </insert>
+</mapper>

@@ -2,6 +2,32 @@ spring:
   application:
     name: moudle
 
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/boot_workflow
+    username: root
+    password: 999595@Scj
+    # HikariCP连接池配置
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      connection-timeout: 30000
+    
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 4096MB  # 单个文件最大大小（视频需调大）
+      max-request-size: 4096MB  # 单次请求最大大小
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.ziwen.moudle.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
 # @formatter:off
 # 以下配置是自定义的支付设置，不是标准的Spring Boot属性
 pay:
