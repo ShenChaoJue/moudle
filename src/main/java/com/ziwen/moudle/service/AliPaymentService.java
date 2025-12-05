@@ -68,9 +68,24 @@ public class AliPaymentService implements PaymentService {
             AlipayResponse response;
             if (TradeTypeEnum.PC.name().equals(order.getTradeType())) {
 
+                log.info("==================== 支付宝支付请求开始 ====================");
                 log.info("支付宝支付请求参数：{}", JSONObject.toJSONString(alipayRequest));
+                log.info("支付宝网关地址：{}", alipayConfig.getServerUrl());
+                log.info("支付宝应用ID：{}", alipayConfig.getAppId());
+
                 response = alipayClient.pageExecute(alipayRequest);
-                log.info("支付宝支付请求结果：{}", JSONObject.toJSONString(alipayRequest));
+
+                if (response == null) {
+                    log.error("支付宝响应为空");
+                    return Response.fail("支付宝响应为空");
+                }
+
+                log.info("支付宝支付请求结果：{}", JSONObject.toJSONString(response));
+                log.info("支付宝响应状态码：{}", response.getCode());
+                log.info("支付宝响应消息：{}", response.getMsg());
+                log.info("支付宝响应子码：{}", response.getSubCode());
+                log.info("支付宝响应子消息：{}", response.getSubMsg());
+                log.info("==================== 支付宝支付请求结束 ====================");
 
                 @SuppressWarnings("unchecked")
                 Response<T> result = (Response<T>) Response.success(response);
@@ -78,9 +93,21 @@ public class AliPaymentService implements PaymentService {
 
             } else if (TradeTypeEnum.APP.name().equals(order.getTradeType())) {
 
+                log.info("==================== 支付宝APP支付请求开始 ====================");
+                log.info("支付宝APP支付请求参数：{}", JSONObject.toJSONString(alipayRequest));
+
                 response = alipayClient.sdkExecute(alipayRequest);
+
+                if (response == null) {
+                    log.error("支付宝APP支付响应为空");
+                    return Response.fail("支付宝APP支付响应为空");
+                }
+
+                log.info("支付宝APP支付响应：{}", JSONObject.toJSONString(response));
+
                 @SuppressWarnings("unchecked")
                 Response<T> result = (Response<T>) Response.success(response);
+                log.info("==================== 支付宝APP支付请求结束 ====================");
                 return result;
 
             } else {
@@ -94,6 +121,9 @@ public class AliPaymentService implements PaymentService {
     
     @Override
     public <T> Response<T> query(String orderNo) {
+        log.info("==================== 支付宝订单查询开始 ====================");
+        log.info("查询订单号：{}", orderNo);
+
         AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
         JSONObject bizContent = new JSONObject();
         bizContent.put("out_trade_no", orderNo);
@@ -102,17 +132,34 @@ public class AliPaymentService implements PaymentService {
         try {
             log.info("支付宝查询请求参数：{}", JSONObject.toJSONString(request));
             AlipayTradeQueryResponse response = alipayClient.execute(request);
+
+            if (response == null) {
+                log.error("支付宝查询响应为空");
+                return Response.fail("支付宝查询响应为空");
+            }
+
+            log.info("支付宝查询响应：{}", JSONObject.toJSONString(response));
+            log.info("查询响应状态码：{}", response.getCode());
+            log.info("查询响应消息：{}", response.getMsg());
+            log.info("查询响应子码：{}", response.getSubCode());
+            log.info("查询响应子消息：{}", response.getSubMsg());
+
             @SuppressWarnings("unchecked")
             Response<T> result = (Response<T>) Response.success(response);
+            log.info("==================== 支付宝订单查询结束 ====================");
             return result;
         } catch (Exception e) {
-            log.info("支付宝请求查询失败:{}", e.getMessage());
-            return Response.fail("支付宝请求查询失败");
+            log.error("支付宝请求查询失败", e);
+            return Response.fail("支付宝请求查询失败: " + e.getMessage());
         }
     }
     
     @Override
     public <T> Response<T> refund(Order order) {
+        log.info("==================== 支付宝退款请求开始 ====================");
+        log.info("退款订单号：{}", order.getOrderNo());
+        log.info("退款金额：{}", order.getAmount());
+
         AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
         JSONObject bizContent = new JSONObject();
         bizContent.put("out_trade_no", order.getOrderNo());
@@ -124,17 +171,32 @@ public class AliPaymentService implements PaymentService {
         try {
             log.info("支付宝退款请求参数：{}", JSONObject.toJSONString(request));
             AlipayTradeRefundResponse response = alipayClient.execute(request);
+
+            if (response == null) {
+                log.error("支付宝退款响应为空");
+                return Response.fail("支付宝退款响应为空");
+            }
+
+            log.info("支付宝退款响应：{}", JSONObject.toJSONString(response));
+            log.info("退款响应状态码：{}", response.getCode());
+            log.info("退款响应消息：{}", response.getMsg());
+            log.info("退款响应子码：{}", response.getSubCode());
+            log.info("退款响应子消息：{}", response.getSubMsg());
+
             @SuppressWarnings("unchecked")
             Response<T> result = (Response<T>) Response.success(response);
+            log.info("==================== 支付宝退款请求结束 ====================");
             return result;
         } catch (Exception e) {
-            log.info("支付宝请求退款失败:{}", e.getMessage());
-            return Response.fail("支付宝请求退款失败");
+            log.error("支付宝请求退款失败", e);
+            return Response.fail("支付宝请求退款失败: " + e.getMessage());
         }
     }
     
     @Override
     public void handleNotify(HttpServletRequest httpServletRequest) throws Exception {
+        log.info("==================== 支付宝回调通知开始 ====================");
+
         Map<String, String> params = new HashMap<>();
         Enumeration<String> paramNames = httpServletRequest.getParameterNames();
         while (paramNames.hasMoreElements()) {
@@ -142,25 +204,42 @@ public class AliPaymentService implements PaymentService {
             String paramValue = httpServletRequest.getParameter(paramName);
             params.put(paramName, paramValue);
         }
-    
+
+        log.info("支付宝回调通知参数：{}", JSONObject.toJSONString(params));
+
         try {
-            boolean signVerified = AlipaySignature.rsaCheckV1( params, alipayConfig.getPublicKey(), PayConstant.UTF_8, PayConstant.SIGN_TYPE_RSA2);
-        
+            boolean signVerified = AlipaySignature.rsaCheckV2(params, alipayConfig.getPublicKey(), PayConstant.UTF_8, PayConstant.SIGN_TYPE_RSA2);
+
             if (!signVerified) {
-                log.info("支付宝回调通知签名验证失败: {}", params);
+                log.error("支付宝回调通知签名验证失败");
+                log.error("回调参数：{}", JSONObject.toJSONString(params));
                 throw new Exception("签名验证失败");
             }
-            
+
+            log.info("支付宝回调通知签名验证成功");
+
             // 商户订单号
             String orderNO = params.get("out_trade_no");
+            // 支付宝交易号
+            String tradeNo = params.get("trade_no");
             // 支付状态
             String tradeStatus = params.get("trade_status");
-            
-            // 处理订单状态
-        
+            // 交易金额
+            String totalAmount = params.get("total_amount");
+
+            log.info("订单号：{}", orderNO);
+            log.info("支付宝交易号：{}", tradeNo);
+            log.info("支付状态：{}", tradeStatus);
+            log.info("交易金额：{}", totalAmount);
+
+            // TODO: 在这里处理订单状态更新逻辑
+            // 例如：根据 tradeStatus 更新订单状态
+
+            log.info("==================== 支付宝回调通知处理成功 ====================");
+
         } catch (Exception e) {
-            log.info("支付宝回调通知失败:{}", e.getMessage());
-            throw new Exception("支付宝回调通知处理失败");
+            log.error("支付宝回调通知失败:{}", e.getMessage(), e);
+            throw new Exception("支付宝回调通知处理失败: " + e.getMessage());
         }
     }
 }

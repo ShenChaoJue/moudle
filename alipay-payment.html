@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝支付</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .loading {
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .qr-code {
+            margin: 20px auto;
+            max-width: 250px;
+        }
+
+        .qr-code img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+
+        .alert strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <div class="info">
+                <p><strong id="statusText">正在准备支付...</strong></p>
+                <p id="statusSubText">请稍等，正在为您跳转到支付宝</p>
+            </div>
+        </div>
+
+        <div class="alert">
+            <strong>⚠️ 沙箱测试环境</strong>
+            <p>请使用沙箱支付宝APP扫码支付</p>
+            <p>账号：vyqqfk0709@sandbox.com</p>
+            <p>支付密码：111111</p>
+        </div>
+
+        <div id="payment-actions" style="display: none;">
+            <button class="btn" id="jumpBtn" onclick="submitForm()">立即跳转到支付宝支付</button>
+            <button class="btn" onclick="autoSubmit()" style="background: #28a745;">自动跳转（需要浏览器允许弹窗）</button>
+        </div>
+
+        <div id="payment-content"></div>
+
+        <div id="manual-jump" style="display: none; margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 10px;">
+            <h3 style="color: #1976D2; margin-bottom: 15px;">💡 无法自动跳转？</h3>
+            <p style="color: #555; margin: 10px 0; font-size: 14px;">
+                如果自动跳转失败，请复制以下链接并在浏览器地址栏中打开：
+            </p>
+            <textarea id="alipayUrl" style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 12px;" readonly></textarea>
+            <button class="btn" onclick="copyUrl()" style="margin-top: 10px; width: 100%;">复制链接</button>
+        </div>
+    </div>
+
+    <!-- 支付宝支付表单（隐藏） -->
+    <form name="punchout_form" method="post" action="https://openapi.alipaydev.com/gateway.do?charset=UTF-8&method=alipay.trade.page.pay&sign=XvSYPpZNF5yWV4kcOTSw7aJD2TwbA%2FtzUmnbuWebboTHALrYmlBNO4zR5OkuxFDQC8xRz5BFFtoqiHmM62%2F5Y9e8pFYn9RM7RZ12rSij6mUB1iboWp2vfTTehhrII%2FABnYMJN7U4YcPHAhab3S1AhOw%2B8%2F2iHJ59xnJxmMghJ0hkzvWsehLYogt%2BnNpA6SIHCBO7mA9Bse2W%2Bpla2lbJB9C157F%2BFAAZOuO%2Buv26dtBjCi3h5IKwXLE3SE0gpVA2H8gcILcqXn82Qc%2BzqC42h3PQ5bp0SvPTDXyZmDYWDevknWK0eJc1XufNtnd%2FgAyEHepv4bjO69SIWQqPA%2BuoOA%3D%3D&return_url=http%3A%2F%2Flocalhost%3A8080%2Fapi%2Freturn&notify_url=http%3A%2F%2Flocalhost%3A8080%2Fapi%2Fnotify%2Fali&version=1.0&app_id=9021000158624144&sign_type=RSA2&timestamp=2025-12-05+14%3A55%3A43&alipay_sdk=alipay-sdk-java-4.39.99.ALL&format=json">
+<input type="hidden" name="biz_content" value="{&quot;out_trade_no&quot;:&quot;DEV001&quot;,&quot;product_code&quot;:&quot;FAST_INSTANT_TRADE_PAY&quot;,&quot;qr_pay_mode&quot;:&quot;4&quot;,&quot;subject&quot;:&quot;订单&quot;,&quot;timeout_express&quot;:&quot;5m&quot;,&quot;total_amount&quot;:&quot;100&quot;}">
+<input type="submit" value="立即支付" style="display:none" >
+</form>
+
+    <script>
+        // 获取表单action地址
+        const formAction = document.querySelector('form[name="punchout_form"]').action;
+        const bizContent = document.querySelector('input[name="biz_content"]').value;
+
+        // 准备支付宝链接
+        const alipayUrl = formAction + '&biz_content=' + encodeURIComponent(bizContent);
+        document.getElementById('alipayUrl').value = alipayUrl;
+
+        // 2秒后显示手动跳转选项
+        setTimeout(() => {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('payment-actions').style.display = 'block';
+            document.getElementById('manual-jump').style.display = 'block';
+
+            document.getElementById('statusText').textContent = '请选择支付方式';
+            document.getElementById('statusSubText').textContent = '点击下方按钮跳转支付宝支付页面';
+        }, 2000);
+
+        // 手动提交表单
+        function submitForm() {
+            document.querySelector('form[name="punchout_form"]').submit();
+        }
+
+        // 自动跳转（带弹窗提示）
+        function autoSubmit() {
+            const newWindow = window.open('', '_blank');
+            if (!newWindow) {
+                alert('无法打开新窗口，请检查浏览器弹窗设置或使用手动跳转按钮！');
+                return;
+            }
+            document.querySelector('form[name="punchout_form"]').target = '_blank';
+            document.querySelector('form[name="punchout_form"]').submit();
+        }
+
+        // 复制链接
+        function copyUrl() {
+            const urlTextarea = document.getElementById('alipayUrl');
+            urlTextarea.select();
+            document.execCommand('copy');
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '已复制！';
+            btn.style.background = '#28a745';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#667eea';
+            }, 2000);
+        }
+
+        // 页面加载完成后尝试自动跳转（可能被阻止）
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                try {
+                    const newWindow = window.open('', '_self');
+                    if (newWindow) {
+                        document.querySelector('form[name="punchout_form"]').target = '_self';
+                        document.querySelector('form[name="punchout_form"]').submit();
+                    }
+                } catch (e) {
+                    console.log('自动跳转被阻止，使用手动跳转');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

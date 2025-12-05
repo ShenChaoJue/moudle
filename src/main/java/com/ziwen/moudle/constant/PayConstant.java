@@ -51,7 +51,7 @@ public class PayConstant {
     //支付成功状态码
     public static final String JD_PAY_STATUS_SUCCESS = "000000";
     // 订单有效时间 300秒
-    public static final String JD_ORDER_VALID_TIME = "300";
+    public static final String JD_ORDER_VALID_TIME = "3000";
     
     /**
      * 银联支付------------
