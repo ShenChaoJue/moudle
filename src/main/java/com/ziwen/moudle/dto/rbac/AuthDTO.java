@@ -89,20 +89,6 @@ public class AuthDTO {
          */
         private String userName;
 
-        /**
-         * 昵称
-         */
-        private String nickname;
-
-        /**
-         * 邮箱
-         */
-        private String email;
-
-        /**
-         * 手机号
-         */
-        private String mobile;
 
         /**
          * 角色名称列表

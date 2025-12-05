@@ -65,13 +65,14 @@
     <!-- 根据用户ID查询用户菜单权限 -->
     <select id="selectMenusByUserId" resultMap="BaseResultMap">
         SELECT DISTINCT
-        <include refid="Base_Column_List"/>
+            m.id, m.create_time, m.update_time, m.menu_name, m.url, m.path, m.type,
+            m.parent_id, m.child_id, m.sort, m.is_deleted
         FROM sys_menu m
         INNER JOIN sys_role_menu rm ON m.id = rm.menu_id AND rm.is_deleted = 0
         INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id AND ur.is_deleted = 0
         WHERE ur.user_id = #{userId}
         AND m.is_deleted = 0
-        ORDER BY sort ASC, id ASC
+        ORDER BY m.sort ASC, m.id ASC
     </select>
 
     <!-- 查询所有菜单路径 -->
