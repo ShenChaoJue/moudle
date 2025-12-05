@@ -1,4 +1,4 @@
-package com.ziwen.moudle.controller;
+package com.ziwen.moudle.controller.pay;
 
 import com.ziwen.moudle.dto.Order;
 import com.ziwen.moudle.enums.PaymentTypeEnum;
