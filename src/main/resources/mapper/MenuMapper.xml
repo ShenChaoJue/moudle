@@ -6,8 +6,6 @@
         <id column="id" property="id"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
-        <result column="create_by" property="createBy"/>
-        <result column="update_by" property="updateBy"/>
         <result column="menu_name" property="menuName"/>
         <result column="url" property="url"/>
         <result column="path" property="path"/>
@@ -19,8 +17,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, create_time, update_time, create_by, update_by,
-        menu_name, url, path, type, parent_id, child_id, sort, is_deleted
+        id, create_time, update_time, menu_name, url, path, type, parent_id, child_id, sort, is_deleted
     </sql>
 
     <!-- 查询所有菜单 -->
@@ -110,32 +107,30 @@
     <insert id="insert" parameterType="com.ziwen.moudle.entity.rbac.Menu">
         INSERT INTO sys_menu
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="menuName != null">menu_name</if>
-            <if test="url != null">url</if>
-            <if test="path != null">path</if>
-            <if test="type != null">type</if>
-            <if test="parentId != null">parent_id</if>
-            <if test="childId != null">child_id</if>
-            <if test="sort != null">sort</if>
-            <if test="createTime != null">create_time</if>
-            <if test="updateTime != null">update_time</if>
-            <if test="createBy != null">create_by</if>
-            <if test="updateBy != null">update_by</if>
-            <if test="isDeleted != null">is_deleted</if>
+            <if test="id != null">id,</if>
+            <if test="menuName != null">menu_name,</if>
+            <if test="url != null">url,</if>
+            <if test="path != null">path,</if>
+            <if test="type != null">type,</if>
+            <if test="parentId != null">parent_id,</if>
+            <if test="childId != null">child_id,</if>
+            <if test="sort != null">sort,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDeleted != null">is_deleted,</if>
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            <if test="menuName != null">#{menuName}</if>
-            <if test="url != null">#{url}</if>
-            <if test="path != null">#{path}</if>
-            <if test="type != null">#{type}</if>
-            <if test="parentId != null">#{parentId}</if>
-            <if test="childId != null">#{childId}</if>
-            <if test="sort != null">#{sort}</if>
-            <if test="createTime != null">#{createTime}</if>
-            <if test="updateTime != null">#{updateTime}</if>
-            <if test="createBy != null">#{createBy}</if>
-            <if test="updateBy != null">#{updateBy}</if>
-            <if test="isDeleted != null">#{isDeleted}</if>
+            <if test="id != null">#{id},</if>
+            <if test="menuName != null">#{menuName},</if>
+            <if test="url != null">#{url},</if>
+            <if test="path != null">#{path},</if>
+            <if test="type != null">#{type},</if>
+            <if test="parentId != null">#{parentId},</if>
+            <if test="childId != null">#{childId},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
         </trim>
     </insert>
 
@@ -151,7 +146,6 @@
             <if test="childId != null">child_id = #{childId},</if>
             <if test="sort != null">sort = #{sort},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
         </set>
         WHERE id = #{id}

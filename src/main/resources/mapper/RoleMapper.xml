@@ -6,15 +6,12 @@
         <id column="id" property="id"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
-        <result column="create_by" property="createBy"/>
-        <result column="update_by" property="updateBy"/>
         <result column="role_name" property="roleName"/>
         <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, create_time, update_time, create_by, update_by,
-        role_name, is_deleted
+        id, create_time, update_time, role_name, is_deleted
     </sql>
 
     <!-- 查询角色列表 -->
@@ -77,20 +74,18 @@
     <insert id="insert" parameterType="com.ziwen.moudle.entity.rbac.Role">
         INSERT INTO sys_role
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="roleName != null">role_name</if>
-            <if test="createTime != null">create_time</if>
-            <if test="updateTime != null">update_time</if>
-            <if test="createBy != null">create_by</if>
-            <if test="updateBy != null">update_by</if>
-            <if test="isDeleted != null">is_deleted</if>
+            <if test="id != null">id,</if>
+            <if test="roleName != null">role_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDeleted != null">is_deleted,</if>
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            <if test="roleName != null">#{roleName}</if>
-            <if test="createTime != null">#{createTime}</if>
-            <if test="updateTime != null">#{updateTime}</if>
-            <if test="createBy != null">#{createBy}</if>
-            <if test="updateBy != null">#{updateBy}</if>
-            <if test="isDeleted != null">#{isDeleted}</if>
+            <if test="id != null">#{id},</if>
+            <if test="roleName != null">#{roleName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDeleted != null">#{isDeleted},</if>
         </trim>
     </insert>
 
@@ -100,7 +95,6 @@
         <set>
             <if test="roleName != null">role_name = #{roleName},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
-            <if test="updateBy != null">update_by = #{updateBy},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
         </set>
         WHERE id = #{id}
