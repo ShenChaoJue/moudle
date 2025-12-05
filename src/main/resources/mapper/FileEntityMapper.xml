@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ziwen.moudle.mapper.FileEntityMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, original_name, content_type, file_size, file_path, access_path, upload_time, create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 文件实体表结构 -->
+    <!--
+    CREATE TABLE `file_entity` (
+      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+      `original_name` varchar(255) DEFAULT NULL COMMENT '原始文件名',
+      `content_type` varchar(100) DEFAULT NULL COMMENT '文件类型（MIME类型）',
+      `file_size` bigint DEFAULT NULL COMMENT '文件大小（字节）',
+      `file_path` varchar(500) DEFAULT NULL COMMENT '服务器存储路径（绝对路径）',
+      `access_path` varchar(500) DEFAULT NULL COMMENT '访问文件的相对路径/URL',
+      `upload_time` datetime DEFAULT NULL COMMENT '上传时间',
+      `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+      `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+      `is_deleted` tinyint DEFAULT '0' COMMENT '是否删除：0-未删除，1-删除',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件实体表';
+    -->
+
+    <!-- 插入文件记录 -->
+    <insert id="insertFileEntity" parameterType="com.ziwen.moudle.entity.file.FileEntity">
+        INSERT INTO file_entity (
+            original_name, 
+            content_type, 
+            file_size, 
+            file_path, 
+            access_path, 
+            upload_time, 
+            create_time, 
+            update_time, 
+            is_deleted
+        ) VALUES (
+            #{originalName}, 
+            #{contentType}, 
+            #{fileSize}, 
+            #{filePath}, 
+            #{accessPath}, 
+            #{uploadTime}, 
+            #{createTime}, 
+            #{updateTime}, 
+            #{isDeleted}
+        )
+    </insert>
+
+    <!-- 根据ID查询文件记录 -->
+    <select id="selectFileEntityById" parameterType="long" resultType="com.ziwen.moudle.entity.file.FileEntity">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM file_entity 
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <!-- 查询所有未删除的文件记录 -->
+    <select id="selectFileEntityList" resultType="com.ziwen.moudle.entity.file.FileEntity">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM file_entity 
+        WHERE is_deleted = 0
+        ORDER BY upload_time DESC
+    </select>
+
+    <!-- 更新文件记录 -->
+    <update id="updateFileEntity" parameterType="com.ziwen.moudle.entity.file.FileEntity">
+        UPDATE file_entity
+        <set>
+            <if test="originalName != null and originalName != ''">original_name = #{originalName},</if>
+            <if test="contentType != null and contentType != ''">content_type = #{contentType},</if>
+            <if test="fileSize != null">file_size = #{fileSize},</if>
+            <if test="filePath != null and filePath != ''">file_path = #{filePath},</if>
+            <if test="accessPath != null and accessPath != ''">access_path = #{accessPath},</if>
+            <if test="uploadTime != null">upload_time = #{uploadTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除文件记录（逻辑删除） -->
+    <update id="deleteFileEntityById" parameterType="long">
+        UPDATE file_entity SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <!-- 根据IDs批量删除文件记录（逻辑删除） -->
+    <update id="deleteFileEntityByIds" parameterType="long">
+        UPDATE file_entity SET is_deleted = 1 WHERE id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>
