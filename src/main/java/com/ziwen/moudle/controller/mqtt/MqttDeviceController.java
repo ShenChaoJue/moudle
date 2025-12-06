@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import com.ziwen.moudle.utils.MqttPublishUtil;
 import com.ziwen.moudle.entity.DeviceStatus;
 import com.ziwen.moudle.service.DeviceStatusService;
+import com.ziwen.moudle.common.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,111 +31,111 @@ public class MqttDeviceController {
      * @param command 控制指令（如{"action":"open","param":1}）
      */
     @GetMapping("/control/{deviceId}")
-    public String controlDevice(@PathVariable String deviceId, @RequestParam String command) {
+    public AjaxResult controlDevice(@PathVariable String deviceId, @RequestParam String command) {
         // 构造控制主题（约定格式：device/{设备ID}/control）
         String topic = "device/" + deviceId + "/control";
         // 发布控制指令
         mqttPublishUtil.publish(topic, command);
-        return "已发送控制指令到设备[" + deviceId + "]：" + command;
+        return AjaxResult.success("已发送控制指令到设备[" + deviceId + "]：" + command);
     }
 
     /**
      * 获取所有设备状态
      */
     @GetMapping("/status/all")
-    public List<DeviceStatus> getAllDeviceStatus() {
-        return deviceStatusService.getAllDeviceStatus();
+    public AjaxResult getAllDeviceStatus() {
+        return AjaxResult.success(deviceStatusService.getAllDeviceStatus());
     }
 
     /**
      * 获取指定设备状态
      */
     @GetMapping("/status/{deviceId}")
-    public DeviceStatus getDeviceStatus(@PathVariable String deviceId) {
+    public AjaxResult getDeviceStatus(@PathVariable String deviceId) {
         DeviceStatus status = deviceStatusService.getDeviceStatus(deviceId);
         if (status == null) {
-            throw new RuntimeException("设备不存在: " + deviceId);
+            return AjaxResult.error("设备不存在: " + deviceId);
         }
-        return status;
+        return AjaxResult.success(status);
     }
 
     /**
      * 获取在线设备列表
      */
     @GetMapping("/status/online")
-    public List<DeviceStatus> getOnlineDevices() {
-        return deviceStatusService.getOnlineDevices();
+    public AjaxResult getOnlineDevices() {
+        return AjaxResult.success(deviceStatusService.getOnlineDevices());
     }
 
     /**
      * 获取离线设备列表
      */
     @GetMapping("/status/offline")
-    public List<DeviceStatus> getOfflineDevices() {
-        return deviceStatusService.getOfflineDevices();
+    public AjaxResult getOfflineDevices() {
+        return AjaxResult.success(deviceStatusService.getOfflineDevices());
     }
 
     /**
      * 获取设备统计信息
      */
     @GetMapping("/status/statistics")
-    public Map<String, Object> getDeviceStatistics() {
-        return deviceStatusService.getDeviceStatistics();
+    public AjaxResult getDeviceStatistics() {
+        return AjaxResult.success(deviceStatusService.getDeviceStatistics());
     }
 
     /**
      * 更新设备信息
      */
     @PutMapping("/status/{deviceId}")
-    public String updateDeviceInfo(@PathVariable String deviceId, @RequestBody DeviceStatus deviceStatus) {
+    public AjaxResult updateDeviceInfo(@PathVariable String deviceId, @RequestBody DeviceStatus deviceStatus) {
         if (!deviceId.equals(deviceStatus.getDeviceId())) {
-            throw new IllegalArgumentException("设备ID不匹配");
+            return AjaxResult.error("设备ID不匹配");
         }
         deviceStatusService.updateDeviceInfo(deviceStatus);
-        return "设备信息更新成功: " + deviceId;
+        return AjaxResult.success("设备信息更新成功: " + deviceId);
     }
 
     /**
      * 删除设备记录
      */
     @DeleteMapping("/status/{deviceId}")
-    public String deleteDevice(@PathVariable String deviceId) {
+    public AjaxResult deleteDevice(@PathVariable String deviceId) {
         deviceStatusService.deleteDevice(deviceId);
-        return "设备记录删除成功: " + deviceId;
+        return AjaxResult.success("设备记录删除成功: " + deviceId);
     }
 
     /**
      * 手动标记设备上线（测试用）
      */
     @PostMapping("/status/{deviceId}/online")
-    public String markDeviceOnline(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
+    public AjaxResult markDeviceOnline(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
         deviceStatusService.deviceOnline(deviceId, payload != null ? payload : "manual_online");
-        return "设备标记为上线: " + deviceId;
+        return AjaxResult.success("设备标记为上线: " + deviceId);
     }
 
     /**
      * 手动标记设备下线（测试用）
      */
     @PostMapping("/status/{deviceId}/offline")
-    public String markDeviceOffline(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
+    public AjaxResult markDeviceOffline(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
         deviceStatusService.deviceOffline(deviceId, payload != null ? payload : "manual_offline");
-        return "设备标记为下线: " + deviceId;
+        return AjaxResult.success("设备标记为下线: " + deviceId);
     }
 
     /**
      * 发送设备心跳（测试用）
      */
     @PostMapping("/status/{deviceId}/heartbeat")
-    public String sendHeartbeat(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
+    public AjaxResult sendHeartbeat(@PathVariable String deviceId, @RequestParam(required = false) String payload) {
         deviceStatusService.deviceHeartbeat(deviceId, payload != null ? payload : "manual_heartbeat");
-        return "设备心跳已记录: " + deviceId;
+        return AjaxResult.success("设备心跳已记录: " + deviceId);
     }
 
     /**
      * 调试接口：查看内存中所有设备状态详细信息
      */
     @GetMapping("/debug/device-status")
-    public Map<String, Object> debugDeviceStatus() {
+    public AjaxResult debugDeviceStatus() {
         List<DeviceStatus> allDevices = deviceStatusService.getAllDeviceStatus();
         Map<String, Object> debugInfo = new HashMap<>();
         debugInfo.put("totalDevices", allDevices.size());
@@ -180,6 +181,6 @@ public class MqttDeviceController {
             ));
         }
 
-        return debugInfo;
+        return AjaxResult.success(debugInfo);
     }
 }
