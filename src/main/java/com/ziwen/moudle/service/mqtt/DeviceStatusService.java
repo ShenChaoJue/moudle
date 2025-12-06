@@ -1,4 +1,4 @@
-package com.ziwen.moudle.service;
+package com.ziwen.moudle.service.mqtt;
 
 import com.ziwen.moudle.entity.DeviceStatus;
 import java.util.List;

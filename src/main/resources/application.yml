@@ -21,6 +21,18 @@ spring:
       max-file-size: 4096MB  # 单个文件最大大小（视频需调大）
       max-request-size: 4096MB  # 单次请求最大大小
 
+# 验证码配置
+captcha:
+  # 验证码图片尺寸
+  width: 110
+  height: 40
+  # 验证码字符长度
+  length: 4
+  # 验证码字体大小
+  font-size: 30
+  # 验证码字符间距
+  char-spacing: 10
+
 # mqtt配置
 mqtt:
   # MQTT服务器地址（tcp://ip:端口，多个用逗号分隔）

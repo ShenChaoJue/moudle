@@ -1,7 +1,8 @@
-package com.ziwen.moudle.service.impl;
+package com.ziwen.moudle.service.impl.mqtt;
 
 import com.ziwen.moudle.entity.DeviceStatus;
-import com.ziwen.moudle.service.DeviceStatusService;
+import com.ziwen.moudle.service.mqtt.DeviceStatusService;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

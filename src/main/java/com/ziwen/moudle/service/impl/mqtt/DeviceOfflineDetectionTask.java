@@ -1,7 +1,8 @@
-package com.ziwen.moudle.service.impl;
+package com.ziwen.moudle.service.impl.mqtt;
 
 import com.ziwen.moudle.entity.DeviceStatus;
-import com.ziwen.moudle.service.DeviceStatusService;
+import com.ziwen.moudle.service.mqtt.DeviceStatusService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

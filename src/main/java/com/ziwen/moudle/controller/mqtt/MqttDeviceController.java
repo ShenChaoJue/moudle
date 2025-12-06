@@ -3,7 +3,7 @@ package com.ziwen.moudle.controller.mqtt;
 import org.springframework.web.bind.annotation.*;
 import com.ziwen.moudle.utils.MqttPublishUtil;
 import com.ziwen.moudle.entity.DeviceStatus;
-import com.ziwen.moudle.service.DeviceStatusService;
+import com.ziwen.moudle.service.mqtt.DeviceStatusService;
 import com.ziwen.moudle.common.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
