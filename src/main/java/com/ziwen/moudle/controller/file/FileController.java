@@ -4,10 +4,12 @@ import com.ziwen.moudle.common.AjaxResult;
 import com.ziwen.moudle.entity.file.FileEntity;
 import com.ziwen.moudle.service.file.FileService;
 import com.ziwen.moudle.utils.FileUploadUtil;
+import com.ziwen.moudle.utils.FileAccessSessionManager;
 import com.ziwen.moudle.utils.MimeTypeUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +33,7 @@ public class FileController {
 
     private final FileService fileService;
     private final FileUploadUtil fileUploadUtil;
+    private final FileAccessSessionManager sessionManager;
 
     /** 允许上传的文件类型 */
     @Value("${file.upload.allowed-types}")
@@ -297,18 +300,52 @@ public class FileController {
     }
 
     /**
-     * 直接访问文件
+     * 直接访问文件（需要访问令牌）
+     * URL格式: /api/files/access/{id}?token={访问令牌}
      */
     @GetMapping("/access/{id}")
-    public void accessFile(@PathVariable Long id, HttpServletResponse response) throws IOException {
+    public void accessFile(@PathVariable Long id,
+                          @RequestParam String token,
+                          HttpServletResponse response) throws IOException {
+        // 验证访问令牌
+        FileAccessSessionManager.FileAccessSession session = sessionManager.validateToken(token);
+        if (session == null) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            AjaxResult errorResult = AjaxResult.error("访问令牌无效或已过期");
+            response.getWriter().write(com.alibaba.fastjson.JSON.toJSONString(errorResult));
+            return;
+        }
+
+        // 验证文件ID是否匹配
+        if (!session.getFileId().equals(id)) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            AjaxResult errorResult = AjaxResult.error("令牌与文件ID不匹配");
+            response.getWriter().write(com.alibaba.fastjson.JSON.toJSONString(errorResult));
+            return;
+        }
+
         FileEntity fileEntity = fileService.getFile(id);
         if (fileEntity == null) {
-            throw new RuntimeException("文件不存在，ID：" + id);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            AjaxResult errorResult = AjaxResult.error("文件不存在，ID：" + id);
+            response.getWriter().write(com.alibaba.fastjson.JSON.toJSONString(errorResult));
+            return;
         }
 
         File file = new File(fileEntity.getFilePath());
         if (!file.exists()) {
-            throw new RuntimeException("文件已被删除，路径：" + fileEntity.getFilePath());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            AjaxResult errorResult = AjaxResult.error("文件已被删除，路径：" + fileEntity.getFilePath());
+            response.getWriter().write(com.alibaba.fastjson.JSON.toJSONString(errorResult));
+            return;
         }
 
         // 设置响应头（支持在线播放和预览）
@@ -316,16 +353,83 @@ public class FileController {
         response.setHeader("Content-Length", String.valueOf(fileEntity.getFileSize()));
         response.setHeader("Accept-Ranges", "bytes");
 
-        // 流式输出文件
+        // 流式输出文件（在输出过程中持续检查令牌有效性）
         try (FileInputStream fis = new FileInputStream(file);
              OutputStream os = response.getOutputStream()) {
             byte[] buffer = new byte[1024 * 16];
             int len;
             while ((len = fis.read(buffer)) != -1) {
+                // 在每次写入前检查令牌是否仍然有效
+                session = sessionManager.validateToken(token);
+                if (session == null) {
+                    // 令牌被撤销，强制停止输出
+                    try {
+                        response.getOutputStream().close();
+                    } catch (IOException ignored) {}
+                    return;
+                }
                 os.write(buffer, 0, len);
             }
             os.flush();
+
+            // 文件传输完成后自动撤销令牌（可选）
+            // sessionManager.revokeToken(token);
         }
+    }
+
+    /**
+     * 生成文件访问令牌
+     * 用途：前端获取播放URL之前，先请求此接口获取访问令牌
+     */
+    @PostMapping("/token/{id}")
+    public AjaxResult generateAccessToken(@PathVariable Long id,
+                                        @RequestParam(defaultValue = "60") int expiresInMinutes) {
+        // 检查文件是否存在
+        FileEntity fileEntity = fileService.getFile(id);
+        if (fileEntity == null) {
+            return AjaxResult.error("文件不存在，ID：" + id);
+        }
+
+        // TODO: 根据实际权限系统验证用户是否有权访问此文件
+        // String userId = getCurrentUserId();
+
+        // 生成访问令牌（无需登录的版本）
+        String token = sessionManager.createAccessToken(id, null, expiresInMinutes);
+
+        // 构建访问URL
+        String accessUrl = "/api/files/access/" + id + "?token=" + token;
+
+        return AjaxResult.success("令牌生成成功", new AccessTokenInfo(
+            token,
+            accessUrl,
+            expiresInMinutes,
+            "令牌将在" + expiresInMinutes + "分钟后过期"
+        ));
+    }
+
+    /**
+     * 撤销文件访问令牌（强制停止播放）
+     * 用途：随时撤销正在进行的播放权限
+     */
+    @DeleteMapping("/token/{id}")
+    public AjaxResult revokeAccessToken(@PathVariable Long id,
+                                       @RequestParam String token) {
+        boolean success = sessionManager.revokeToken(token);
+        if (success) {
+            return AjaxResult.success("令牌已撤销，播放已停止");
+        } else {
+            return AjaxResult.error("令牌撤销失败：令牌不存在或已过期");
+        }
+    }
+
+    /**
+     * 撤销文件的所有访问令牌（管理员功能）
+     * 用途：强制停止某个文件的所有播放
+     */
+    @DeleteMapping("/tokens/{id}")
+    public AjaxResult revokeAllFileTokens(@PathVariable Long id) {
+        int count = sessionManager.revokeFileTokens(id);
+        return AjaxResult.success("已撤销" + count + "个访问令牌");
     }
 
     /**
@@ -533,6 +637,38 @@ public class FileController {
         public ChunkUploadResponse(String uploadId, String tempDirPath) {
             this.uploadId = uploadId;
             this.tempDirPath = tempDirPath;
+        }
+    }
+
+    /**
+     * 访问令牌信息
+     */
+    public static class AccessTokenInfo {
+        public String token;
+        public String accessUrl;
+        public int expiresInMinutes;
+        public String message;
+
+        public AccessTokenInfo(String token, String accessUrl, int expiresInMinutes, String message) {
+            this.token = token;
+            this.accessUrl = accessUrl;
+            this.expiresInMinutes = expiresInMinutes;
+            this.message = message;
+        }
+    }
+
+    /**
+     * 定时清理过期令牌
+     * 每10分钟清理一次过期无效的访问令牌
+     */
+    @Scheduled(fixedRate = 600000) // 10分钟
+    public void cleanupExpiredTokens() {
+        int beforeCount = sessionManager.getActiveTokenCount();
+        sessionManager.cleanupExpiredTokens();
+        int afterCount = sessionManager.getActiveTokenCount();
+
+        if (beforeCount != afterCount) {
+            System.out.println("文件访问令牌清理完成：清理了 " + (beforeCount - afterCount) + " 个过期令牌");
         }
     }
 }
