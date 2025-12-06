@@ -21,6 +21,29 @@ spring:
       max-file-size: 4096MB  # 单个文件最大大小（视频需调大）
       max-request-size: 4096MB  # 单次请求最大大小
 
+# mqtt配置
+mqtt:
+  # MQTT服务器地址（tcp://ip:端口，多个用逗号分隔）
+  broker-url: tcp://127.0.0.1:1883
+  # 客户端ID（唯一标识，建议加前缀避免冲突）
+  client-id: spring-boot-mqtt-client
+  # 用户名（若MQTT服务器开启认证）
+  username: admin
+  # 密码
+  password: 123456
+  # 连接超时时间（秒）
+  connection-timeout: 30
+  # 会话保持时间（秒，0表示清理会话）
+  keep-alive-interval: 60
+  # 重连间隔（秒）
+  reconnect-interval: 5
+  # 默认QoS级别（0/1/2）
+  qos: 1
+  # 是否保留消息
+  retain: false
+  # 订阅的主题（设备上报数据的主题，多个用逗号分隔）
+  subscribe-topics: device/+/report,device/+/status,device/+/connect,device/+/disconnect,device/+/heartbeat,device/+/response
+
 # 自定义文件上传配置
 file:
   upload:
