@@ -96,3 +96,18 @@ pay:
     notify-url: http://localhost:8080/api/notify/ali
     return-url: http://localhost:8080/api/return
 # @formatter:on
+
+# MiniMax AI 配置
+minimax:
+  # API 密钥（需要从 MiniMax 官网获取）
+  api-key: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJ6aXdlbiIsIlVzZXJOYW1lIjoieml3ZW4iLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTk4Njc3OTIzNDIzNTg1MDk4MiIsIlBob25lIjoiMTUyNzMxOTc2NDMiLCJHcm91cElEIjoiMTk4Njc3OTIzNDIyNzQ2MjM3NCIsIlBhZ2VOYW1lIjoiIiwiTWFpbCI6IiIsIkNyZWF0ZVRpbWUiOiIyMDI1LTExLTIxIDExOjM3OjExIiwiVG9rZW5UeXBlIjo0LCJpc3MiOiJtaW5pbWF4In0.f2xwHS36GdT8EpgudQPz2OGyX7eARHgmqqh5bkDQeLGEZtSv0KDzqgH2dLnNnuAyc2UwUfSWcEOSNkS-7aY8ba8hxQ4lpYX40UdObNJNwcebdIJdRGU5uCDTc9V5rEK0vyYY10JWc0embHZ63f4_xnMyWQY6zjx7fji9Q_xRYsBLB8wfl3Qt113TsViQsKYuTuN6ZEni3wYmyYkmPhHefJySIvReqSPdTd4wUHtwK-jfE_PVYI_OHfiFbc4V3fjPJfkgPYgiW_kG8qvD3PuIZCtq-QErAU30__NfD9gM5wkWfzmFJq_SO58SKzlvEeeoYMcAZcmdDvdV4IUpoCl3Zw
+  # API 基础 URL
+  base-url: https://api.minimaxi.com/anthropic
+  # 请求超时时间（毫秒）
+  timeout: 30000
+  # 最大重试次数
+  max-retries: 3
+  # 默认模型
+  default-model: MiniMax-M2
+  # 请求间隔（毫秒）
+  request-interval: 100

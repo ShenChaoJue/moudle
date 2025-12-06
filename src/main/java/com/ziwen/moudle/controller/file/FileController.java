@@ -1,13 +1,19 @@
 package com.ziwen.moudle.controller.file;
 
 import com.ziwen.moudle.common.AjaxResult;
+import com.ziwen.moudle.dto.file.FileContentInfo;
 import com.ziwen.moudle.entity.file.FileEntity;
+import com.ziwen.moudle.mapper.file.FileMapper;
+import com.ziwen.moudle.service.file.FileContentService;
 import com.ziwen.moudle.service.file.FileService;
 import com.ziwen.moudle.utils.FileUploadUtil;
 import com.ziwen.moudle.utils.FileAccessSessionManager;
 import com.ziwen.moudle.utils.MimeTypeUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
@@ -18,6 +24,7 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,14 +33,18 @@ import java.util.UUID;
  *
  * @author ziwen
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
+@Tag(name = "文件管理", description = "文件上传、下载、搜索和内容读取接口")
 public class FileController {
 
     private final FileService fileService;
     private final FileUploadUtil fileUploadUtil;
     private final FileAccessSessionManager sessionManager;
+    private final FileMapper fileMapper;
+    private final FileContentService fileContentService;
 
     /** 允许上传的文件类型 */
     @Value("${file.upload.allowed-types}")
@@ -436,8 +447,109 @@ public class FileController {
      * 查询文件列表
      */
     @GetMapping("/list")
+    @Operation(summary = "获取文件列表", description = "查询所有文件")
     public AjaxResult listFiles() {
-        return AjaxResult.success(fileService.listFiles());
+        log.info("查询文件列表");
+        List<FileEntity> files = fileMapper.selectFileList();
+        return AjaxResult.success("查询成功", files);
+    }
+
+    /**
+     * 搜索文件
+     */
+    @GetMapping("/search")
+    @Operation(summary = "搜索文件", description = "根据关键词搜索文件")
+    public AjaxResult searchFiles(@RequestParam String keyword) {
+        log.info("搜索文件，关键词: {}", keyword);
+        List<FileEntity> files = fileMapper.searchByKeyword(keyword);
+        return AjaxResult.success("搜索完成", files);
+    }
+
+    /**
+     * 搜索可读文件
+     */
+    @GetMapping("/search-readable")
+    @Operation(summary = "搜索可读文件", description = "搜索所有可读取的文本文件")
+    public AjaxResult searchReadableFiles() {
+        log.info("搜索可读文件");
+        List<FileEntity> files = fileMapper.selectReadableFiles();
+        return AjaxResult.success("搜索完成", files);
+    }
+
+    /**
+     * 获取文件详情
+     */
+    @GetMapping("/{id}")
+    @Operation(summary = "获取文件详情", description = "根据ID获取文件信息")
+    public AjaxResult getFileById(@PathVariable Long id) {
+        log.info("查询文件详情，ID: {}", id);
+        FileEntity file = fileMapper.selectById(id);
+        if (file == null) {
+            return AjaxResult.error("文件不存在");
+        }
+        return AjaxResult.success("查询成功", file);
+    }
+
+    /**
+     * 读取文件内容
+     */
+    @GetMapping("/{id}/content")
+    @Operation(summary = "读取文件内容", description = "读取指定文件的文本内容")
+    public AjaxResult getFileContent(@PathVariable Long id) {
+        log.info("读取文件内容，ID: {}", id);
+        try {
+            FileContentInfo contentInfo = fileContentService.readFileContent(id);
+            return AjaxResult.success("读取成功", contentInfo);
+        } catch (Exception e) {
+            log.error("读取文件内容失败", e);
+            return AjaxResult.error("读取失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量读取文件内容
+     */
+    @PostMapping("/batch-content")
+    @Operation(summary = "批量读取文件内容", description = "批量读取多个文件的内容")
+    public AjaxResult getBatchFileContent(@RequestBody List<Long> fileIds) {
+        log.info("批量读取文件内容，数量: {}", fileIds.size());
+        try {
+            List<FileContentInfo> contents = fileIds.stream()
+                    .map(new java.util.function.Function<Long, FileContentInfo>() {
+                        @Override
+                        public FileContentInfo apply(Long id) {
+                            try {
+                                return fileContentService.readFileContent(id);
+                            } catch (Exception e) {
+                                log.warn("读取文件失败，ID: {}", id, e);
+                                return null;
+                            }
+                        }
+                    })
+                    .filter(content -> content != null)
+                    .collect(java.util.stream.Collectors.toList());
+
+            return AjaxResult.success("批量读取完成", contents);
+        } catch (Exception e) {
+            log.error("批量读取文件失败", e);
+            return AjaxResult.error("批量读取失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查文件是否可读
+     */
+    @GetMapping("/{id}/readable-check")
+    @Operation(summary = "检查文件是否可读", description = "检查文件是否为可读的文本文件")
+    public AjaxResult checkFileReadable(@PathVariable Long id) {
+        log.info("检查文件是否可读，ID: {}", id);
+        FileEntity file = fileMapper.selectById(id);
+        if (file == null) {
+            return AjaxResult.error("文件不存在");
+        }
+
+        boolean readable = fileContentService.isReadableFile(file);
+        return AjaxResult.success("检查完成", readable);
     }
 
     /**

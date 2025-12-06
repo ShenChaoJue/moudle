@@ -49,4 +49,28 @@ public interface FileMapper {
      * @param id 文件ID
      */
     void deleteById(@Param("id") Long id);
+
+    /**
+     * 根据关键词搜索文件
+     *
+     * @param keyword 关键词（文件名、原始文件名）
+     * @return 匹配的文件列表
+     */
+    List<FileEntity> searchByKeyword(@Param("keyword") String keyword);
+
+    /**
+     * 根据文件类型查询文件
+     *
+     * @param contentType 文件类型（MIME类型）
+     * @return 文件列表
+     */
+    List<FileEntity> selectByContentType(@Param("contentType") String contentType);
+
+    /**
+     * 获取可读取的文件类型列表
+     * （如：text/plain, text/markdown, application/json等）
+     *
+     * @return 可读取的文件列表
+     */
+    List<FileEntity> selectReadableFiles();
 }

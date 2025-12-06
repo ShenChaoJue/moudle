@@ -89,4 +89,67 @@
         WHERE id = #{id} AND is_deleted = 0
     </update>
 
+    <!-- 根据关键词搜索文件 -->
+    <select id="searchByKeyword" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_file
+        WHERE is_deleted = 0
+        AND (
+            original_name LIKE CONCAT('%', #{keyword}, '%')
+            OR content_type LIKE CONCAT('%', #{keyword}, '%')
+        )
+        ORDER BY upload_time DESC
+    </select>
+
+    <!-- 根据文件类型查询文件 -->
+    <select id="selectByContentType" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_file
+        WHERE is_deleted = 0
+        AND content_type LIKE CONCAT('%', #{contentType}, '%')
+        ORDER BY upload_time DESC
+    </select>
+
+    <!-- 获取可读取的文件类型列表 -->
+    <select id="selectReadableFiles" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM sys_file
+        WHERE is_deleted = 0
+        AND (
+            -- 基于MIME类型判断
+            content_type LIKE 'text/%'
+            OR content_type = 'application/json'
+            OR content_type = 'application/xml'
+            OR content_type = 'application/properties'
+            OR content_type = 'application/x-yaml'
+            -- 基于文件扩展名判断
+            OR LOWER(original_name) LIKE '%.txt'
+            OR LOWER(original_name) LIKE '%.md'
+            OR LOWER(original_name) LIKE '%.markdown'
+            OR LOWER(original_name) LIKE '%.json'
+            OR LOWER(original_name) LIKE '%.xml'
+            OR LOWER(original_name) LIKE '%.properties'
+            OR LOWER(original_name) LIKE '%.yml'
+            OR LOWER(original_name) LIKE '%.yaml'
+            OR LOWER(original_name) LIKE '%.java'
+            OR LOWER(original_name) LIKE '%.py'
+            OR LOWER(original_name) LIKE '%.c'
+            OR LOWER(original_name) LIKE '%.cpp'
+            OR LOWER(original_name) LIKE '%.h'
+            OR LOWER(original_name) LIKE '%.hpp'
+            OR LOWER(original_name) LIKE '%.cs'
+            OR LOWER(original_name) LIKE '%.js'
+            OR LOWER(original_name) LIKE '%.ts'
+            OR LOWER(original_name) LIKE '%.css'
+            OR LOWER(original_name) LIKE '%.sql'
+            OR LOWER(original_name) LIKE '%.sh'
+            OR LOWER(original_name) LIKE '%.bat'
+            OR LOWER(original_name) LIKE '%.log'
+        )
+        ORDER BY upload_time DESC
+    </select>
+
 </mapper>
