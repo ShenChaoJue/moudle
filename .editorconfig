@@ -1,0 +1,67 @@
+# EditorConfig 配置文件
+# https://editorconfig.org/
+
+root = true
+
+# 所有文件
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Java 文件
+[*.java]
+indent_size = 4
+max_line_length = 120
+
+# XML 文件
+[*.{xml,xsd,xsl}]
+indent_size = 2
+
+# YAML 文件
+[*.{yml,yaml}]
+indent_size = 2
+
+# Properties 文件
+[*.properties]
+indent_size = 2
+
+# HTML 文件
+[*.{html,htm}]
+indent_size = 2
+
+# CSS 文件
+[*.{css,scss,sass}]
+indent_size = 2
+
+# JavaScript 文件
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+
+# JSON 文件
+[*.json]
+indent_size = 2
+
+# Markdown 文件
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+indent_size = 2
+
+# Shell 脚本
+[*.{sh,bash}]
+indent_size = 2
+
+# SQL 文件
+[*.sql]
+indent_size = 2
+
+# Maven POM 文件
+[pom.xml]
+indent_size = 2
+
+# 配置文件
+[*.{conf,config}]
+indent_size = 2

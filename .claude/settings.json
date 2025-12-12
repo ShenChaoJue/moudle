@@ -1,0 +1,67 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p:*)",
+      "Bash(mvn:*)",
+      "Bash(java:*)",
+      "Bash(sql:*)",
+      "Bash(chmod:*)",
+      "Read(file:**)",
+      "Edit(file:**)",
+      "Write(file:**)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(force push:*)",
+      "Bash(rm:*)",
+      "Bash(del:*)",
+      "Write(file:*.env)",
+      "Write(file:*.key)",
+      "Write(file:*.pem)"
+    ],
+    "ask": [
+      "Bash(mvn clean install:*)",
+      "Bash(mvn deploy:*)",
+      "Bash(spring-boot:run:*)",
+      "Write(file:pom.xml)",
+      "Write(file:application.yml)",
+      "Write(file:application-dev.yml)",
+      "Write(file:application-prod.yml)"
+    ]
+  },
+  "ui": {
+    "theme": "light",
+    "code_highlighting": true,
+    "show_line_numbers": true,
+    "wrap_long_lines": true
+  },
+  "context": {
+    "include_file_contents": true,
+    "max_file_size": "100KB",
+    "auto_refresh": true,
+    "follow_symbols": true
+  },
+  "features": {
+    "auto_completion": true,
+    "code_analysis": true,
+    "error_detection": true,
+    "security_scan": true,
+    "performance_hints": true
+  },
+  "project_specific": {
+    "language": "java",
+    "framework": "spring-boot",
+    "java_version": "17",
+    "build_tool": "maven",
+    "database": "mysql",
+    "orm": "mybatis",
+    "modules": [
+      "rbac",
+      "payment",
+      "file-management",
+      "mqtt",
+      "ai-service",
+      "captcha"
+    ]
+  }
+}
