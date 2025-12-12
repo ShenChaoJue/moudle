@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ziwen.moudle.mapper.file.FileChunkMapper">
+
+    <!-- 结果集映射 -->
+    <resultMap id="BaseResultMap" type="com.ziwen.moudle.entity.file.FileChunkEntity">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER"/>
+        <result column="file_id" property="fileId" jdbcType="BIGINT"/>
+        <result column="chunk_index" property="chunkIndex" jdbcType="INTEGER"/>
+        <result column="chunk_text" property="chunkText" jdbcType="LONGVARCHAR"/>
+        <result column="start_pos" property="startPos" jdbcType="INTEGER"/>
+        <result column="end_pos" property="endPos" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, create_time, update_time, is_deleted, file_id, chunk_index, chunk_text, start_pos, end_pos
+    </sql>
+
+    <!-- 插入片段 -->
+    <insert id="insert" parameterType="com.ziwen.moudle.entity.file.FileChunkEntity">
+        INSERT INTO file_chunk (
+            id, create_time, update_time, is_deleted,
+            file_id, chunk_index, chunk_text, start_pos, end_pos
+        ) VALUES (
+            #{id}, NOW(), NOW(), 0,
+            #{fileId}, #{chunkIndex}, #{chunkText}, #{startPos}, #{endPos}
+        )
+    </insert>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_chunk
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <!-- 根据ID列表批量查询 -->
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_chunk
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </select>
+
+    <!-- 根据文件ID查询所有片段 -->
+    <select id="selectByFileId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_chunk
+        WHERE file_id = #{fileId} AND is_deleted = 0
+        ORDER BY chunk_index ASC
+    </select>
+
+    <!-- 删除文件的所有片段 -->
+    <update id="deleteByFileId" parameterType="java.lang.Long">
+        UPDATE file_chunk
+        SET update_time = NOW(), is_deleted = 1
+        WHERE file_id = #{fileId} AND is_deleted = 0
+    </update>
+
+</mapper>
+
