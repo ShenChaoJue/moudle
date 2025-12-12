@@ -2,12 +2,15 @@ package com.ziwen.moudle.controller.file;
 
 import com.ziwen.moudle.common.AjaxResult;
 import com.ziwen.moudle.entity.file.FileEntity;
+import com.ziwen.moudle.mapper.file.FileChunkMapper;
 import com.ziwen.moudle.service.file.FileService;
 import com.ziwen.moudle.utils.FileUploadUtil;
 import com.ziwen.moudle.utils.FileAccessSessionManager;
 import com.ziwen.moudle.utils.MimeTypeUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
@@ -26,6 +29,7 @@ import java.util.UUID;
  *
  * @author ziwen
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -34,6 +38,10 @@ public class FileController {
     private final FileService fileService;
     private final FileUploadUtil fileUploadUtil;
     private final FileAccessSessionManager sessionManager;
+    private final com.ziwen.moudle.service.file.FileChunkingService fileChunkingService;
+
+    @Autowired
+    private FileChunkMapper chunkMapper;
 
     /** 允许上传的文件类型 */
     @Value("${file.upload.allowed-types}")
@@ -146,6 +154,27 @@ public class FileController {
     }
 
     /**
+     * 重新向量化文件
+     */
+    @PostMapping("/reindex/{fileId}")
+    public AjaxResult reindexFile(@PathVariable Long fileId) {
+        try {
+            FileEntity file = fileService.getFile(fileId);
+            if (file == null) {
+                return AjaxResult.error("文件不存在");
+            }
+            // 删除旧的片段和向量
+            chunkMapper.deleteByFileId(fileId);
+            // 重新处理
+            fileChunkingService.processFile(file);
+            return AjaxResult.success("重新向量化成功");
+        } catch (Exception e) {
+            log.error("重新向量化失败", e);
+            return AjaxResult.error("重新向量化失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 文件上传
      */
     @PostMapping("/upload")
@@ -164,6 +193,7 @@ public class FileController {
 
         File destFile = null; // 用于记录已创建的文件
         boolean fileCreated = false; // 标记文件是否创建成功
+        Long fileId = null; // 用于记录已保存的文件ID
 
         try {
             // 3. 创建存储目录（按日期分目录）
@@ -203,8 +233,23 @@ public class FileController {
             fileEntity.setAccessPath(accessPath); // 存访问路径
             fileEntity.initUploadTime(); // 设置上传时间
 
-            Long fileId = fileService.saveFile(fileEntity);
+            fileId = fileService.saveFile(fileEntity);
             fileEntity.setId(fileId);
+
+            // RAG处理：异步处理文件切片和向量化
+            try {
+                fileChunkingService.processFile(fileEntity);
+            } catch (Exception e) {
+                log.error("文件RAG处理失败: {}", fileEntity.getOriginalName(), e);
+                // RAG处理失败时，删除已保存的文件和数据库记录
+                if (destFile != null && destFile.exists()) {
+                    destFile.delete();
+                }
+                if (fileId != null) {
+                    fileService.deleteFile(fileId);
+                }
+                return AjaxResult.error("文件处理失败：" + e.getMessage());
+            }
 
             // 自动分片处理：如果文件大小超过阈值，自动分片
             if (fileEntity.getFileSize() > autoChunkThreshold) {
@@ -224,9 +269,15 @@ public class FileController {
 
                     return AjaxResult.success("文件上传成功（自动分片：" + totalChunks + "片）", fileEntity);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    // 分片失败不影响文件上传
-                    return AjaxResult.success("文件上传成功（分片失败，使用完整文件）", fileEntity);
+                    // 分片失败时也要清理资源
+                    log.error("文件分片处理失败: {}", fileEntity.getOriginalName(), e);
+                    if (destFile != null && destFile.exists()) {
+                        destFile.delete();
+                    }
+                    if (fileId != null) {
+                        fileService.deleteFile(fileId);
+                    }
+                    return AjaxResult.error("文件分片处理失败：" + e.getMessage());
                 }
             }
 
@@ -235,11 +286,20 @@ public class FileController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            // 事务回滚：删除已创建的文件
+            // 事务回滚：删除已创建的文件和数据库记录
             if (fileCreated && destFile != null && destFile.exists()) {
                 boolean deleted = destFile.delete();
                 if (!deleted) {
                     System.err.println("警告：数据库保存失败，且无法删除已创建的文件：" + destFile.getAbsolutePath());
+                }
+            }
+            // 如果文件记录已保存到数据库，则删除它
+            if (fileId != null) {
+                try {
+                    fileService.deleteFile(fileId);
+                } catch (Exception deleteEx) {
+                    System.err.println("警告：无法删除已保存的文件记录，ID：" + fileId);
+                    deleteEx.printStackTrace();
                 }
             }
             return AjaxResult.error("文件上传失败：" + e.getMessage());

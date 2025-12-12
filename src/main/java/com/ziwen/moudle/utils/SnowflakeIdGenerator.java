@@ -1,6 +1,8 @@
 package com.ziwen.moudle.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * 雪花算法ID生成器
@@ -8,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ziwen
  */
 @Slf4j
+@Component
 public class SnowflakeIdGenerator {
 
     /**
@@ -86,7 +89,8 @@ public class SnowflakeIdGenerator {
      * @param workerId     工作机器ID
      * @param datacenterId 数据中心ID
      */
-    public SnowflakeIdGenerator(long workerId, long datacenterId) {
+    public SnowflakeIdGenerator(@Value("${snowflake.worker-id:1}") long workerId,
+                               @Value("${snowflake.datacenter-id:1}") long datacenterId) {
         if (workerId > MAX_WORKER_ID || workerId < 0) {
             throw new IllegalArgumentException(String.format("工作机器ID不能大于%d或小于0", MAX_WORKER_ID));
         }
